@@ -6,6 +6,9 @@ const port = 3000;
 const morgan = require('morgan');
 
 const app = express();
+const dishRouter = require('./routes/dishRouter');
+
+app.use('/dishes', dishRouter);
 
 app.use(morgan('dev'));
 app.use(express.static(__dirname + '/public'));
@@ -17,6 +20,8 @@ app.use((req, res, next) => {
     res.end('<html><body><h1>This is an Express Server</h1></body></html>');
 
 });
+
+
 
 const server = http.createServer(app);
 

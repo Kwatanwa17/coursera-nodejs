@@ -57,7 +57,7 @@ promoRouter.route('/:promoId')
     })
     .post((req, res, next) => {
         res.statusCode = 403;
-        res.end('POST operation not supported on /dishes/' + req.params.dishId);
+        res.end('POST operation not supported on /dishes/' + req.params.promoId);
     })
     .put((req, res, next) => {
         Promotions.findByIdAndUpdate(req.params.promoId, {

@@ -21,6 +21,9 @@ router.post('/signup', (req, res, next) => {
                     user.firstname = req.body.firstname;
                 if (req.body.lastname)
                     user.firstname = req.body.lastname;
+                // // give adminnpm
+                // if (req.body.admin)
+                //     user.admin = true;
                 user.save((err, user) => {
                     if (err) {
                         res.statusCode = 500;

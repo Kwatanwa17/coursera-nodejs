@@ -2,6 +2,7 @@ var express = require('express');
 const bodyParser = require('body-parser');
 var passport = require('passport');
 var authenticate = require('../authenticate');
+const cors = require('./cors');
 
 var User = require('../models/user');
 
@@ -9,67 +10,83 @@ const router = express.Router();
 
 router.use(bodyParser.json());
 
-router.post('/signup', (req, res, next) => {
-    User.register(new User({username: req.body.username}), req.body.password,
-        (err, user) => {
-            if (err) {
-                res.statusCode = 500;
-                res.setHeader('Content-Type', 'application/json');
-                res.json({err: err});
-            } else {
-                if (req.body.firstname)
-                    user.firstname = req.body.firstname;
-                if (req.body.lastname)
-                    user.firstname = req.body.lastname;
-                // // give adminnpm
-                // if (req.body.admin)
-                //     user.admin = true;
-                user.save((err, user) => {
-                    if (err) {
-                        res.statusCode = 500;
-                        res.setHeader('Content-Type', 'application/json');
-                        res.json({err: err});
-                        return ;
-                    }
-                    passport.authenticate('local')(req, res, () => {
-                        res.statusCode = 200;
-                        res.setHeader('Content-Type', 'application/json');
-                        res.json({success: true, status: 'Registration Successful!'});
+router
+    .options(cors.corsWithOptions, (req, res) => {
+        res.sendStatus(200);
+    })
+    .post('/signup', cors.corsWithOptions, (req, res, next) => {
+        User.register(new User({username: req.body.username}), req.body.password,
+            (err, user) => {
+                if (err) {
+                    res.statusCode = 500;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json({err: err});
+                } else {
+                    if (req.body.firstname)
+                        user.firstname = req.body.firstname;
+                    if (req.body.lastname)
+                        user.firstname = req.body.lastname;
+                    // // give adminnpm
+                    // if (req.body.admin)
+                    //     user.admin = true;
+                    user.save((err, user) => {
+                        if (err) {
+                            res.statusCode = 500;
+                            res.setHeader('Content-Type', 'application/json');
+                            res.json({err: err});
+                            return;
+                        }
+                        passport.authenticate('local')(req, res, () => {
+                            res.statusCode = 200;
+                            res.setHeader('Content-Type', 'application/json');
+                            res.json({success: true, status: 'Registration Successful!'});
+                        });
                     });
-                });
-            }
-        });
-});
+                }
+            });
+    });
 
-router.post('/login', passport.authenticate('local'), (req, res) => {
-    var token = authenticate.getToken({_id: req.user._id});
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/json');
-    res.json({success: true, token: token, status: 'Log in Successful!'});
-})
+router
+    .options(cors.corsWithOptions, (req, res) => {
+        res.sendStatus(200);
+    })
+    .post('/login', cors.corsWithOptions, passport.authenticate('local'), (req, res) => {
+        var token = authenticate.getToken({_id: req.user._id});
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json({success: true, token: token, status: 'Log in Successful!'});
+    })
 
-router.get('/logout', (req, res) => {
-    if (req.session) {
-        req.session.destroy();
-        res.clearCookie('session-id');
-        res.redirect('/');
-    } else {
-        var err = new Error('You are not logged in!');
-        err.status = 403;
-        next(err);
-    }
-});
+router
+    .options(cors.corsWithOptions, (req, res) => {
+        res.sendStatus(200);
+    })
+    .get('/logout', cors.cors, (req, res) => {
+        if (req.session) {
+            req.session.destroy();
+            res.clearCookie('session-id');
+            res.redirect('/');
+        } else {
+            var err = new Error('You are not logged in!');
+            err.status = 403;
+            next(err);
+        }
+    });
 
 // assignment 3 task 3
-router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
-    User.find({})
-        .then((users) => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(users);
-            }, (err) => next(err)
-                .catch((err) => next(err))
-        );
-});
+router
+    .options(cors.corsWithOptions, (req, res) => {
+        res.sendStatus(200);
+    })
+    .get('/', cors.cors, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
+        User.find({})
+            .then((users) => {
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json(users);
+                }, (err) => next(err)
+                    .catch((err) => next(err))
+            );
+    });
 
 module.exports = router;
